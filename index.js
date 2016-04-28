@@ -24,13 +24,7 @@ const extractData = (body) => {
     .detailMetrics
     .filter(el => el.name === 'Subway')[0]
     .childMetrics
-    .map(el => el.categories[0])
-    .map((el) => {
-      return {
-        slug: el.slug,
-        value: el.value
-      };
-    });
+    .map(el => el.categories[0]);
 
   const targets = body;
 
@@ -40,18 +34,28 @@ const extractData = (body) => {
   };
 };
 
-const percentage = (data, lineSlug) => {
-  return Number((1 - data.filter(line => line.slug === lineSlug)[0].value) * 100).toFixed(0);
+const emoji = (lineReliability, lineTargets) => {
+  // for a given slug and reliability expected value return an emoji that indicates how the line is doing
+  return ':)';
 };
 
-const formatData = (reliability) => {
+const formatLines = (data, lines) => {
+  return lines.map((line) => {
+    const lineReliability = data.reliability.filter(x => x.slug === line)[0];
+    const lineTargets = {};
+    const percentage = Number((1 - lineReliability.value) * 100).toFixed(0);
+    return `${lineReliability.name}: ${percentage}% ${emoji(lineReliability, lineTargets)}`;
+  });
+};
+
+const formatData = (data) => {
   const template = [
-    `MBTA Report Card for ${moment().format('dddd, MMM Do')}:`,
-    `Blue Line: ${percentage(reliability, 'blue')}%`,
-    `Green Line: ${percentage(reliability, 'green')}%`,
-    `Orange Line: ${percentage(reliability, 'orange')}%`,
-    `Red Line: ${percentage(reliability, 'red')}%`
+    `MBTA Report Card for ${moment().format('dddd, MMM Do')}:`
   ];
+
+  for (const line of formatLines(data, ['blue', 'green', 'orange', 'red'])) {
+    template.push(line);
+  }
 
   return template.join('\n');
 };
