@@ -1,6 +1,10 @@
 import request from 'request';
 import moment from 'moment';
 
+Array.prototype.choice = function () {  // eslint-disable-line no-extend-native
+  return this[Math.floor(Math.random() * this.length)];
+};
+
 const getData = () => {
   return new Promise((resolve, reject) => {
     request({
@@ -17,16 +21,24 @@ const getData = () => {
 };
 
 const extractData = (body) => {
-  const reliability = body
+  const metrics = body
     .dashboard
     .metricCategories
     .reliability
     .detailMetrics
     .filter(el => el.name === 'Subway')[0]
-    .childMetrics
+    .childMetrics;
+
+  const reliability = metrics
     .map(el => el.categories[0]);
 
-  const targets = body;
+  const targets = metrics
+    .map((metric) => {
+      return {
+        slug: metric.slug,
+        target: metric.series.filter(el => el.slug === 'target_goal')[0].data[0]
+      };
+    });
 
   return {
     reliability,
@@ -34,17 +46,29 @@ const extractData = (body) => {
   };
 };
 
-const emoji = (lineReliability, lineTargets) => {
+const emoji = (lineReliability) => {
   // for a given slug and reliability expected value return an emoji that indicates how the line is doing
-  return ':)';
+
+  const perf = 1 - lineReliability.value;
+  switch (Math.floor(perf * 10)) {
+  case 9:
+    return ['💯', '💃', '⚡️', '🚀', '🎉', '🎆', '😻'].choice();
+  case 8:
+    return ['👍', '😄', '👏', '👌', '✅', '⏩', '📈', '😋', '😌', '😎', '😛', '😊', '🙃'].choice();
+  case 7:
+    return ['🤕', '🙄', '🙇', '😑', '🔔', '🆗', '⏳', '😒'].choice();
+  case 6:
+    return ['🙀', '😰', '😳', '🚶', '😢', '❗️', '💔', '📉', '🐢', '🙈', '🐛'].choice();
+  default:
+    return ['💩', '😭', '💀', '🚨', '👹', '⁉️', '🚫', '🆘', '🙅', '😲', '😡'].choice();
+  }
 };
 
 const formatLines = (data, lines) => {
   return lines.map((line) => {
     const lineReliability = data.reliability.filter(x => x.slug === line)[0];
-    const lineTargets = {};
     const percentage = Number((1 - lineReliability.value) * 100).toFixed(0);
-    return `${lineReliability.name}: ${percentage}% ${emoji(lineReliability, lineTargets)}`;
+    return `${lineReliability.name}: ${percentage}% ${emoji(lineReliability)}`;
   });
 };
 
