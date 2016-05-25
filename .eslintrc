@@ -1,6 +1,5 @@
-
 {
-  "extends": "eslint-config-airbnb",
+  "extends": "eslint-config-airbnb-base",
   "rules":  {
     "arrow-spacing": 2,
     "arrow-body-style": 0,
@@ -29,6 +28,7 @@
   },
   "env": {
     "node": true,
-    "commonjs": true
+    "commonjs": true,
+    "es6": true
   }
 }
