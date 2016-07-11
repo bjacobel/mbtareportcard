@@ -1,5 +1,7 @@
 import moment from 'moment';
 import fetch from 'isomorphic-fetch';
+import Vinz from 'vinz';
+import Twitter from 'twitter';
 
 Array.prototype.choice = function () {  // eslint-disable-line no-extend-native
   return this[Math.floor(Math.random() * this.length)];
@@ -83,7 +85,35 @@ const formatData = (data) => {
 };
 
 const publish = (message) => {
-  return message;
+  const vinz = new Vinz();
+  return vinz.get('TwitterConsumerKey', 'TwitterConsumerSecret', 'TwitterAccessToken', 'TwitterAccessTokenSecret')
+    .then((secrets) => {
+      /* eslint-disable camelcase */
+      const [
+        consumer_key,
+        consumer_secret,
+        access_token_key,
+        access_token_secret
+      ] = secrets;
+      /* eslint-enable camelcase */
+
+      const client = new Twitter({
+        consumer_key,
+        consumer_secret,
+        access_token_key,
+        access_token_secret
+      });
+
+      return new Promise((resolve, reject) => {
+        client.post('statuses/update', { status: message }, (error, tweet) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(tweet.text);
+          }
+        });
+      });
+    });
 };
 
 export const handler = (event, context, callback) => {
