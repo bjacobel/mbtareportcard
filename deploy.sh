@@ -1,6 +1,13 @@
+babel index.js --out-dir dist
+
+cp -r secrets dist/
+cp -r package.json dist/
+
 pushd dist
 
-zip -r mbtareportcard.zip main.js
+npm install --production
+
+zip -ru mbtareportcard.zip ./*
 
 aws lambda update-function-code \
   --function-name mbtareportcard \

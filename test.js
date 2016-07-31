@@ -1,4 +1,4 @@
-import { handler } from './main';
+import { handler } from './index';
 
 handler({}, {}, (error, success) => {
   if (error) {

@@ -1,5 +1,5 @@
 import moment from 'moment';
-import fetch from 'isomorphic-fetch';
+import request from 'request';
 import Vinz from 'vinz';
 import Twitter from 'twitter';
 
@@ -8,16 +8,20 @@ Array.prototype.choice = function () {  // eslint-disable-line no-extend-native
 };
 
 const getData = () => {
-  return fetch('http://www.mbtabackontrack.com/performance/performance.php?metric=reliability')
-    .then((response) => {
-      return response.json();
-    })
-    .then((json) => {
-      return json;
-    })
-    .catch((error) => {
-      return error;
+  return new Promise((resolve, reject) => {
+    return request({
+      baseUrl: 'http://www.mbtabackontrack.com/performance/',
+      uri: 'performance.php?metric=reliability',
+      method: 'GET',
+      json: true
+    }, (error, message, json) => {
+      if (error || message.statusCode !== 200) {
+        reject({ error, message });
+      } else {
+        resolve(json);
+      }
     });
+  });
 };
 
 const extractData = (body) => {
@@ -26,6 +30,7 @@ const extractData = (body) => {
     .metricCategories
     .reliability
     .detailMetrics
+    .all
     .filter(el => el.name === 'Subway')[0]
     .childMetrics;
 
@@ -85,9 +90,13 @@ const formatData = (data) => {
 };
 
 const publish = (message) => {
-  const vinz = new Vinz();
-  return vinz.get('TwitterConsumerKey', 'TwitterConsumerSecret', 'TwitterAccessToken', 'TwitterAccessTokenSecret')
-    .then((secrets) => {
+  const vinz = new Vinz('us-east-1');
+  return vinz.get(
+      'TwitterConsumerKey',
+      'TwitterConsumerSecret',
+      'TwitterAccessToken',
+      'TwitterAccessTokenSecret'
+    ).then((secrets) => {
       /* eslint-disable camelcase */
       const [
         consumer_key,
