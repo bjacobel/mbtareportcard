@@ -1,4 +1,6 @@
-babel index.js --out-dir dist
+#!/bin/sh
+
+$(npm bin)/babel index.js --out-dir dist
 
 cp -r secrets dist/
 cp -r package.json dist/
